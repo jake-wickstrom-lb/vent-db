@@ -1,6 +1,9 @@
+extern crate urlencoding;
+
 use std::io::{self, Write, BufRead};
 use std::path::Path;
 use std::fs::{self, File};
+use urlencoding::{encode, decode};
 
 struct Command {
   op: String,
@@ -40,6 +43,8 @@ fn setup_db() {
 }
 
 fn parse_input(input: &String) -> Command {
+  print!("Input: {}", input);
+
   let mut input = input.split_whitespace();
   
   let op = match input.next() {
@@ -54,21 +59,15 @@ fn parse_input(input: &String) -> Command {
     None => panic!("Invalid command")
   };
 
-  let value = match input.next() {
-    Some(value) => value,
-    None => {
-      if op == "set" {
-        panic!("Invalid command")
-      } else {
-        ""
-      }
-    }
-  };
+  let value = input.enumerate()
+    .map(|(_, v)| v)
+    .collect::<Vec<&str>>()
+    .join(" ");
 
   return Command {
     op: String::from(op),
     key: String::from(key),
-    value: String::from(value)
+    value
   }
 }
 
@@ -90,7 +89,7 @@ fn set_key(key: String, value: String) {
     .open("db.txt")
     .unwrap();
 
-  let line = format!("{} {}\n", key, value);
+  let line = format!("{} {}\n", key, encode(&value));
   file.write_all(line.as_bytes()).unwrap(); 
 }
 
@@ -111,7 +110,7 @@ fn get_key(key: String) -> String {
       }
     }
 
-    return value;
+    return decode(&value).expect("UTF-8").to_string();
   } else {
     panic!("Failed to read db.txt");
   }
