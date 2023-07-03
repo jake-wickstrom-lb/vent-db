@@ -1,4 +1,0 @@
-key 1
-otherkey 2
-key3 3
-key newval
